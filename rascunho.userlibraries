@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="Maven: org.openpnp:opencv:3.4.2-0">
+    <archive path="C:/Users/autologon/.m2/repository/org/openpnp/opencv/3.4.2-0/opencv-3.4.2-0.jar" />
+  </library>
+  <library name="Maven: com.microsoft.onnxruntime:onnxruntime:1.18.0">
+    <archive path="C:/Users/autologon/.m2/repository/com/microsoft/onnxruntime/onnxruntime/1.18.0/onnxruntime-1.18.0.jar" />
+  </library>
+</eclipse-userlibraries>
+
