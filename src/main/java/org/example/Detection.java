@@ -1,38 +1,47 @@
 package org.example;
 
 public class Detection {
-    private final float x0;
-    private final float y0;
-    private final float x1;
-    private final float y1;
+    private final float cx;
+    private final float cy;
+    private final float width;
+    private final float height;
     private final float confidence;
     private final int classId;
     private final String className;
 
-    public Detection(float x0, float y0, float x1, float y1, float confidence, int classId, String className) {
-        this.x0 = x0;
-        this.y0 = y0;
-        this.x1 = x1;
-        this.y1 = y1;
+    public Detection(float cx, float cy, float width, float height, float confidence, int classId, String className) {
+        this.cx = cx;
+        this.cy = cy;
+        this.width = width;
+        this.height = height;
         this.confidence = confidence;
         this.classId = classId;
         this.className = className;
     }
 
-    public float getX0() {
-        return x0;
+    public float getCx() {
+        return cx;
     }
 
-    public float getY0() {
-        return y0;
+    public float getCy() {
+        return cy;
     }
 
-    public float getX1() {
-        return x1;
+    public float getWidth() {
+        return width;
     }
 
-    public float getY1() {
-        return y1;
+    public float getHeight() {
+        return height;
+    }
+
+    public float[] getDetectionBoxBounds() {
+        return new float[] {
+                this.getCx() - this.getWidth() / 2F,
+                this.getCy() - this.getHeight() / 2F,
+                this.getCx() + this.getWidth() / 2F,
+                this.getCy() + this.getHeight() / 2F
+        };
     }
 
     public float getConfidence() {
@@ -54,10 +63,10 @@ public class Detection {
     @Override
     public String toString() {
         return "Detection{" +
-                "x0=" + x0 +
-                ", y0=" + y0 +
-                ", x1=" + x1 +
-                ", y1=" + y1 +
+                "cx=" + cx +
+                ", cy=" + cy +
+                ", width=" + width +
+                ", height=" + height +
                 ", confidence=" + confidence +
                 ", classId=" + classId +
                 ", className='" + className + '\'' +

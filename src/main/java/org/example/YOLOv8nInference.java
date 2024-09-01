@@ -21,6 +21,7 @@ public class YOLOv8nInference implements AutoCloseable {
     private final OrtSession session;
     private static final int INPUT_WIDTH = 640;
     private static final int INPUT_HEIGHT = 640;
+    private static final float NMS_THRESHOLD = 0.3F;
 
     public YOLOv8nInference(String modelPath, String yamlMetadataPath) throws OrtException {
         this.env = OrtEnvironment.getEnvironment();
@@ -60,24 +61,53 @@ public class YOLOv8nInference implements AutoCloseable {
             }
         }
 
+        resizedImage.release();
+
         return inputTensor;
     }
 
-    // TODO: Apply Non-Maximum Suppression
+    private static float getIntersectionArea(float[] box1, float[] box2) {
+        float x1 = Math.max(box1[0], box2[0]);
+        float y1 = Math.max(box1[1], box2[1]);
+        float x2 = Math.min(box1[2], box2[2]);
+        float y2 = Math.min(box1[3], box2[3]);
+
+        return (x2-x1)*(y2-y1);
+    }
+
+    private static float getUnionArea(float[] box1, float[] box2) {
+        float box1Area = (box1[2] - box1[0])*(box1[3]-box1[1]);
+        float box2Area = (box2[2] - box2[0])*(box2[3]-box2[1]);
+
+        return box1Area + box2Area - getIntersectionArea(box1, box2);
+    }
+
+    private static float getIntersectionOverUnion(float[] box1, float[] box2) {
+        return getIntersectionArea(box1, box2)/getUnionArea(box1, box2);
+    }
+
+    private String getClassNameFromClassId(int classId) {
+        try {
+            return this.metadata.getNames().get(classId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private List<Detection> postprocessOutput(float[][][] output, int originalWidth, int originalHeight) {
-        float rescaleX = (float) 1;
-        float rescaleY = (float) 1;
+        float rescaleX = (float) originalWidth / INPUT_WIDTH;
+        float rescaleY = (float) originalHeight / INPUT_HEIGHT;
 
-        HashMap<Integer, Detection> hashedDetections = new HashMap<>();
+        List<Detection> detectionsList = new ArrayList<>();
 
-        float[][] detection = YOLOv8nInference.transpose(output[0]);
+        float[][] detections = YOLOv8nInference.transpose(output[0]);
 
-        // Extract the bounding boxes, confidences, and class IDs
-        for (float[] data : detection) {
-            float x0 = data[0] * rescaleX;
-            float y0 = data[1] * rescaleY;
-            float x1 = data[2] * rescaleX;
-            float y1 = data[3] * rescaleY;
+        // Extract the bounding boxes, confidences, and class IDs to Detection objects
+        for (float[] data : detections) {
+            float cx = data[0] * rescaleX;
+            float cy = data[1] * rescaleY;
+            float width = data[2] * rescaleX;
+            float height = data[3] * rescaleY;
 
             int classId = -1;
             float maxConfidence = 0;
@@ -89,17 +119,35 @@ public class YOLOv8nInference implements AutoCloseable {
                 }
             }
 
-            Detection existingDetection = hashedDetections.get(classId);
-
-            if (classId != -1 && (existingDetection == null || existingDetection.getConfidence() < maxConfidence)) {
-                hashedDetections.put(classId, new Detection(x0, y0,x1, y1, maxConfidence, classId, this.metadata.getNames().get(classId)));
+            if (maxConfidence >= 0.01) {
+                detectionsList.add(
+                    new Detection(
+                        cx, cy,
+                        width, height,
+                        maxConfidence,
+                        classId, getClassNameFromClassId(classId)
+                    )
+                );
             }
         }
 
-        List<Detection> detections = new ArrayList<>(hashedDetections.values());
-        detections.sort((o1, o2) -> Float.compare(o2.getConfidence(), o1.getConfidence()));
+        // Apply The NMS to the list
+        detectionsList.sort((o1, o2) -> Float.compare(o2.getConfidence(), o1.getConfidence()));
+        List<Detection> detectionsOutput = new ArrayList<>();
 
-        return detections;
+        while (!detectionsList.isEmpty()) {
+            Detection detection = detectionsList.get(0);
+
+            detectionsOutput.add(detection);
+            detectionsList.removeIf(
+                d -> getIntersectionOverUnion(
+                   detection.getDetectionBoxBounds(),
+                    d.getDetectionBoxBounds()
+                ) >= NMS_THRESHOLD
+            );
+        }
+
+        return detectionsOutput;
     }
 
     public static float[][] transpose(float[][] matrix) {
