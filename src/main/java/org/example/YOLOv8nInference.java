@@ -19,16 +19,23 @@ public class YOLOv8nInference implements AutoCloseable {
     private final YOLOv8YamlData metadata;
     private final OrtEnvironment env;
     private final OrtSession session;
+    private final int objectClassesQuantity;
     private static final int INPUT_WIDTH = 640;
     private static final int INPUT_HEIGHT = 640;
     private static final float NMS_THRESHOLD = 0.3F;
 
-    public YOLOv8nInference(String modelPath, String yamlMetadataPath) throws OrtException {
+    public YOLOv8nInference(String modelPath, String yamlMetadataPath, boolean useGPU) throws OrtException {
         this.env = OrtEnvironment.getEnvironment();
 
         SessionOptions options = new SessionOptions();
+        if (useGPU) {
+            options.addCUDA();
+        }
+
         this.session = env.createSession(modelPath, options);
         this.metadata = new YOLOv8YamlData(yamlMetadataPath);
+
+        this.objectClassesQuantity = this.metadata.getNames().size();
     }
 
     public List<Detection> infer(Mat image) throws OrtException {
@@ -112,7 +119,7 @@ public class YOLOv8nInference implements AutoCloseable {
             int classId = -1;
             float maxConfidence = 0;
 
-            for (int i = 0; i < 80; i++) {
+            for (int i = 0; i < this.objectClassesQuantity; i++) {
                 if (maxConfidence < data[i + 4]) {
                     maxConfidence = data[i + 4];
                     classId = i;

@@ -76,8 +76,11 @@ public class Main {
         }
 
         public void runModelTest() {
-            String modelAbsolutePath = this.getResourceAbsolutePath("yolov8/yolov8n.onnx");
-            String metadataAbsolutePath = this.getResourceAbsolutePath("yolov8/metadata.yaml");
+//            String modelAbsolutePath = this.getResourceAbsolutePath("yolov8/yolov8n.onnx");
+//            String metadataAbsolutePath = this.getResourceAbsolutePath("yolov8/metadata.yaml");
+
+            String modelAbsolutePath = this.getResourceAbsolutePath("yolov8openimagev7/model.onnx");
+            String metadataAbsolutePath = this.getResourceAbsolutePath("yolov8openimagev7/metadata.yaml");
 
             if (modelAbsolutePath == null || metadataAbsolutePath == null) {
                 System.err.println("Model or metadata file not found !");
@@ -92,7 +95,7 @@ public class Main {
 //            Mat image = convertImageFileToMat("samples/train.jpg");
 
             List<Detection> detections = List.of();
-            try (YOLOv8nInference model = new YOLOv8nInference(modelAbsolutePath, metadataAbsolutePath)) {
+            try (YOLOv8nInference model = new YOLOv8nInference(modelAbsolutePath, metadataAbsolutePath, true)) {
 
                 if (image == null) {
                     throw new Exception("A imagem é vazia !");
@@ -112,19 +115,19 @@ public class Main {
                 err.printStackTrace();
             }
 
-            if (Objects.nonNull(image)) {
-                Mat imageWithBoxes = createImageWithDetectionBoxes(image, detections);
-
-                HighGui.imshow("Teste", imageWithBoxes);
-                HighGui.waitKey();
-                HighGui.windows.values().forEach(imageWindow -> {
-                    imageWindow.frame.dispose();
-                });
-                HighGui.windows.clear();
-
-                image.release();
-                imageWithBoxes.release();
-            }
+//            if (Objects.nonNull(image) && detections.size() > 0) {
+//                Mat imageWithBoxes = createImageWithDetectionBoxes(image, detections);
+//
+//                HighGui.imshow("Teste", imageWithBoxes);
+//                HighGui.waitKey();
+//                HighGui.windows.values().forEach(imageWindow -> {
+//                    imageWindow.frame.dispose();
+//                });
+//                HighGui.windows.clear();
+//
+//                image.release();
+//                imageWithBoxes.release();
+//            }
         }
 
         public void run() throws URISyntaxException, IOException {

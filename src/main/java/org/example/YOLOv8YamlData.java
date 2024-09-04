@@ -18,9 +18,9 @@ public class YOLOv8YamlData {
     private String version;
     private String license;
     private String docs;
-    private int stride;
+    private Integer stride;
     private String task;
-    private int batch;
+    private Integer batch;
     private ArrayList<Integer> imgsz;
     private List<String> names;
 
@@ -59,9 +59,9 @@ public class YOLOv8YamlData {
         this.version = (String) metadata.get("version");
         this.license = (String) metadata.get("license");
         this.docs = (String) metadata.get("docs");
-        this.stride = (int) metadata.get("stride");
+        this.stride = (Integer) metadata.get("stride");
         this.task = (String) metadata.get("task");
-        this.batch = (int) metadata.get("batch");
+        this.batch = (Integer) metadata.get("batch");
         this.imgsz = (ArrayList<Integer>) metadata.get("imgsz");
         this.names = new ArrayList<>();
 
